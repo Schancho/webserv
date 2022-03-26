@@ -12,10 +12,15 @@ std::string  responce(std::string target)
     int ret = open(target.c_str(), O_RDONLY);
     if (ret < 0)
     {
-        rt = ("HTTP/1.1 404 Not found\nContent-Type: text/plain\nContent-Length: 9\n\nnot found");
+        rt = ("HTTP/1.1 404 Not found\nContent-Type: text/plain\nContent-Length: 10\n\nnot found");
         return rt;
     }
-    rt.append("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ");
+    if (target == "index.html")
+        rt.append("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ");
+    else
+    {
+        rt.append("HTTP/1.1 200 OK\nContent-Type: image/jpg\nContent-Length: ");
+    }
     int red;
     char buff[4000];
     int size = 0;
@@ -77,8 +82,12 @@ int main()
         std::fstream file;
         file.open(filename, std::ios_base::app | std::ios_base::in);
         file << from << std::endl;
+        file.close();
+        file.open("rrr.txt");
 
         std::getline (file, line, '\n');
+        file.close();
+        remove("rrr.txt");
         std::cout << "+++++++++++++++++++++from:" <<line << std::endl;
         int pos;
         pos = line.find(" ");
@@ -86,7 +95,7 @@ int main()
         int pos2;
         pos2 = line.find(" ");
         line = line.substr(0, pos2);
-        std::cout << "+++++++++++++++++++++line:" << line << std::endl;
+        std::cout << "+++++++++++++++++++++line:" << line <<std::endl;
         // std::string bf;
         // bf.append(buffer);
         // std::string line;
@@ -94,7 +103,11 @@ int main()
         // std::getline(file, line);
         // file << buffer;
         // std::cout << responce("2.jpg").length÷() << srt
-        std::string str  =  responce("index.html");
+         std::string str;
+        if (line == "/")
+            str  =  responce("index.html");
+        else
+            str  =  responce(line);
         std::cout << str.size() << std::endl;
         write(new_socket , str.c_str() , str.size());
         // write(new_socket, "defr",4);
