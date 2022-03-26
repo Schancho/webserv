@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
 
 class Socket
 {
