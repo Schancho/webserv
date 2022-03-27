@@ -26,8 +26,28 @@ public:
     ~Socket();
 };
 
-
-
-// 
-
+//create a class to parse an http request
+class Parser
+{
+private:
+    std::string target;
+    std::string methode;
+    std::string version;
+    std::string body;
+    std::string header;
+    std::string host;
+    std::string port;
+    std::string path;
+    public:
+    Parser(std::string request);
+    std::string get_target();
+    std::string get_methode();
+    std::string get_version();
+    std::string get_body();
+    std::string get_header();
+    std::string get_host();
+    std::string get_port();
+    std::string get_path();
+};
+ 
 #endif

@@ -3,24 +3,37 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <map>
+std::string getContentTypeByFileName(std::string &fileName)
+{
+    std::map<std::string, std::string> map;
 
+    map.insert(std::pair<std::string, std::string>("html", "text/html"));
+    map.insert(std::pair<std::string, std::string>("css", "text/css"));
+    map.insert(std::pair<std::string, std::string>("js", "application/javascript"));
+    map.insert(std::pair<std::string, std::string>("jpg", "image/jpeg"));
+    map.insert(std::pair<std::string, std::string>("png", "image/png"));
+    map.insert(std::pair<std::string, std::string>("gif", "image/gif"));
+    map.insert(std::pair<std::string, std::string>("pdf", "application/pdf"));
+    map.insert(std::pair<std::string, std::string>("txt", "text/plain"));
+    map.insert(std::pair<std::string, std::string>("mp3", "audio/mpeg"));
+    map.insert(std::pair<std::string, std::string>("mp4", "video/mp4"));
+    return map.find(fileName.substr(fileName.find_last_of(".") + 1))->second;
+
+}
 std::string  responce(std::string target)
 {
     std::string body;
     std::string rt;
     // js css html jpg -> text/plane  extesnsin
+    target = "/Users/schancho/Desktop/webserv/Networking" + target;
     int ret = open(target.c_str(), O_RDONLY);
     if (ret < 0)
     {
         rt = ("HTTP/1.1 404 Not found\nContent-Type: text/plain\nContent-Length: 10\n\nnot found");
         return rt;
     }
-    if (target == "index.html")
-        rt.append("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ");
-    else
-    {
-        rt.append("HTTP/1.1 200 OK\nContent-Type: image/jpg\nContent-Length: ");
-    }
+    rt = ("HTTP/1.1 200 OK\nContent-Type: " + getContentTypeByFileName(target) + "\nContent-Length: ");
     int red;
     char buff[4000];
     int size = 0;
@@ -43,7 +56,7 @@ int main()
     // "/Users/schancho/Desktop/webserv/Networking"
 
     int new_socket = -1, valread ;
-    Socket sock(AF_INET, SOCK_STREAM, 0, 1338, INADDR_ANY);
+    Socket sock(AF_INET, SOCK_STREAM, 0, 1337, INADDR_ANY);
     //char *hello= strdup("HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 16\n\n");
     struct sockaddr_in address = sock.get_address();
     int addrlen = sizeof(address);
@@ -72,7 +85,7 @@ int main()
         printf("%d -- main  = %d\n", new_socket, sock.get_socket());
         
    
-        valread = read( new_socket , buffer, 30000);
+        valread = read( new_socket , buffer, 1000000);
         
         printf("%s\n",buffer);
         std::string line;
@@ -105,7 +118,7 @@ int main()
         // std::cout << responce("2.jpg").length÷() << srt
          std::string str;
         if (line == "/")
-            str  =  responce("index.html");
+            str  =  responce("/index.html");
         else
             str  =  responce(line);
         std::cout << str.size() << std::endl;
