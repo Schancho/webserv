@@ -26,7 +26,6 @@ public:
     ~Socket();
 };
 
-//create a class to parse an http request
 class Parser
 {
 private:
