@@ -9,7 +9,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
 class Socket
 {
 private:
@@ -31,7 +31,7 @@ class Parser
 {
 private:
     std::string target;
-    std::string methode;
+    std::string method;
     std::string version;
     std::string body;
     std::string header;
@@ -41,13 +41,16 @@ private:
     public:
     Parser(std::string request);
     std::string get_target();
-    std::string get_methode();
+    std::string get_method();
     std::string get_version();
     std::string get_body();
     std::string get_header();
     std::string get_host();
     std::string get_port();
     std::string get_path();
+    
 };
- 
+
+
+
 #endif

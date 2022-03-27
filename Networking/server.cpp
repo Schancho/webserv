@@ -4,6 +4,10 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <poll.h>
+#include <time.h>
+#include <sys/time.h>
+
 std::string getContentTypeByFileName(std::string &fileName)
 {
     std::map<std::string, std::string> map;
@@ -25,12 +29,11 @@ std::string  responce(std::string target)
 {
     std::string body;
     std::string rt;
-    // js css html jpg -> text/plane  extesnsin
     target = "/Users/schancho/Desktop/webserv/Networking" + target;
     int ret = open(target.c_str(), O_RDONLY);
     if (ret < 0)
     {
-        rt = ("HTTP/1.1 404 Not found\nContent-Type: text/plain\nContent-Length: 10\n\nnot found");
+        rt = ("HTTP/1.1 404 Not found\nContent-Type: text/plain\nConnection: close\nContent-Length: 9\n\nnot found");
         return rt;
     }
     rt = ("HTTP/1.1 200 OK\nContent-Type: " + getContentTypeByFileName(target) + "\nContent-Length: ");
@@ -45,87 +48,90 @@ std::string  responce(std::string target)
     rt.append(std::to_string(size));
     rt.append("\n\n");
     rt.append(body.c_str(), body.size());
+    std::cerr << "========> contet " <<  std::to_string(size) << "   " << body.size() << std::endl;
     return rt;
 }
-
-// parser
 
 int main()
 {
     char *buff;
-    // "/Users/schancho/Desktop/webserv/Networking"
-
+    struct pollfd fds[100];
+    nfds_t nfds = 1;
+    int i;
     int new_socket = -1, valread ;
-    Socket sock(AF_INET, SOCK_STREAM, 0, 1337, INADDR_ANY);
-    //char *hello= strdup("HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 16\n\n");
-    struct sockaddr_in address = sock.get_address();
-    int addrlen = sizeof(address);
-    if (bind(sock.get_socket(), (struct sockaddr *)&address, sizeof(address))<0) // already
-    {
-        perror("In bind");
-        exit(EXIT_FAILURE);
-    }
-        struct sockaddr_in remote_address;
-    if (listen(sock.get_socket(), 1000) < 0)
-    {
-        perror("In listen");
-        exit(EXIT_FAILURE);
-    }   
-     char buffer[30000] = {0};
-   socklen_t len =  sizeof(sockaddr_in);
-    while(1)
-    {
-        
-       printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-        if ((new_socket = accept(sock.get_socket(), (struct sockaddr *)&remote_address, &len  ))<0)
-        {
-            perror("In accept");
-            exit(EXIT_FAILURE);
-        }
-        printf("%d -- main  = %d\n", new_socket, sock.get_socket());
-        
-   
-        valread = read( new_socket , buffer, 1000000);
-        
-        printf("%s\n",buffer);
-        std::string line;
-        std::string from;
-        from.append(buffer);
-        std::string filename("rrr.txt");
-        std::fstream file;
-        file.open(filename, std::ios_base::app | std::ios_base::in);
-        file << from << std::endl;
-        file.close();
-        file.open("rrr.txt");
+    Socket sock(AF_INET, SOCK_STREAM, 0, 1337, INADDR_ANY); 
+    char buffer[30000] = {0};
+    struct sockaddr_in remote_address;
+    socklen_t len =  sizeof(sockaddr_in);
+    memset(fds, 0 , sizeof(fds));
 
-        std::getline (file, line, '\n');
-        file.close();
-        remove("rrr.txt");
-        std::cout << "+++++++++++++++++++++from:" <<line << std::endl;
-        int pos;
-        pos = line.find(" ");
-        line = line.substr(pos + 1);
-        int pos2;
-        pos2 = line.find(" ");
-        line = line.substr(0, pos2);
-        std::cout << "+++++++++++++++++++++line:" << line <<std::endl;
-        // std::string bf;
-        // bf.append(buffer);
-        // std::string line;
-        // std::ofstream file;
-        // std::getline(file, line);
-        // file << buffer;
-        // std::cout << responce("2.jpg").length÷() << srt
-         std::string str;
-        if (line == "/")
-            str  =  responce("/index.html");
-        else
-            str  =  responce(line);
-        std::cout << str.size() << std::endl;
-        write(new_socket , str.c_str() , str.size());
-        // write(new_socket, "defr",4);
-        printf("%d...------------------Hello message sent-------------------\n",new_socket);
-        close(new_socket);
+    fds[0].fd = sock.get_socket();
+    fds[0].events = POLLIN;
+    while (1)
+    {
+        int ret = poll(fds, nfds, -1);
+        if (ret < 0)
+        {
+            perror("poll");
+            exit(1);
+        }
+  
+        for (i = 0; i < nfds; i++)
+        {   
+        printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+            if (fds[i].revents & POLLIN)
+            {
+                std::cout << "==================================" << std::endl;
+                 if (fds[i].fd== sock.get_socket())
+                {
+                    new_socket = accept(fds[i].fd, (struct sockaddr *)&remote_address, &len);
+                  fcntl(new_socket, F_SETFL, O_NONBLOCK);
+                    if (new_socket < 0)
+                    {
+                        perror("accept");
+                        exit(EXIT_FAILURE);
+                    }
+                    printf("\n+++++++ New connection accepted ++++++++\n\n");
+                    fds[nfds].fd = new_socket;
+                    fds[nfds].events = POLLIN;
+                    nfds++;
+                    continue; ;
+                }
+
+                valread = read(fds[i].fd, buffer, 3000);
+                    
+                printf("%s\n",buffer);
+                if (valread < 0)
+                {
+                    close(fds[i].fd);
+                    fds[i].fd = -1;
+                    continue;
+                }
+                if (valread == 0)
+                {             
+                    close(fds[i].fd);
+                    fds[i].fd = -1;
+                    continue;
+                }
+                std::string request(buffer);
+                std::string str;
+                Parser parser(request);
+                if (parser.get_target() == "/")
+                    str  =  responce("/index.html");
+                else
+                    str = responce(parser.get_target());
+                //std::cout<<parser.get_target()<<std::endl;
+                //std::cout << str << std::endl;
+                int ret =   write(fds[i].fd , str.c_str() , str.size());
+                if (ret == 0)
+                {
+                close(fds[i].fd);
+                fds[i].fd = -1;
+                }
+                printf("------------------Hello message sent-------------------\n");
+            }
+   
+        }
     }
     return 0;
 }
