@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <map>
 class Socket
 {
 private:
@@ -37,8 +38,13 @@ private:
     std::string host;
     std::string port;
     std::string path;
+    std::string content_length;
+    std::string transfert_encoding;
+    std::string requ;
+
     public:
     Parser(std::string request);
+    std::map<std::string, std::string>_headers;
     std::string get_target();
     std::string get_method();
     std::string get_version();
@@ -47,6 +53,9 @@ private:
     std::string get_host();
     std::string get_port();
     std::string get_path();
+    std::string get_transfert_encoding();
+    std::string get_content_length();
+    std::string append_request(std::string request);
     
 };
 
