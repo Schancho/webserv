@@ -103,7 +103,7 @@ std::string getContentTypeByFileName(std::string &fileName)
 
 }
 
-void Responce::set_responce(std::string target)//, std::string method, std::string version)//, std::string body)
+void Responce::set_responce(std::string target, std::string body_request)//, std::string method, std::string version)//, std::string body)
 {
     std::string body;
     target = "/Users/schancho/Desktop/webserv/Networking" + target;
@@ -140,8 +140,16 @@ void Responce::set_responce(std::string target)//, std::string method, std::stri
     this->responce += "X-Frame-Options: " + x_frame_options + "\r\n";
     this->responce += "\r\n";
     this->responce.append(body.c_str(), body.size());
+    if(body_request.size() > 0)
+    {
+        std::ofstream file;
+	    file.open("kkll.jpg");
+        if (file.is_open())
+            file << body_request;
+    }
 
 }
+
 std::string Responce::get_responce()
 {
     return responce;

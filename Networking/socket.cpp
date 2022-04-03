@@ -82,31 +82,41 @@ std::vector<std::string> split_header (std::string s) {
     return res;
 }
 
-std::string receive_body(std::string line)
+void Parser::receive_body(std::string line)
 {
-    int size;
-    while (line != "0/r/n")
+    if (this->_headers.count("Transfer-Encoding") == 1 && this->_headers.at("Transfer-Encoding") == "chunked")
     {
-        std::stringstream d(line);
-        d >> std::hex >> size;
+        ;
+    }
+    else
+    {
+        body += line;
+        content_length += body.size();
         
+        std:: cout << "****** " << content_length << std::endl;
+        if (this->_headers.count("Content-Length") >= 0)
+            if(this->_headers.at("Content-Length").size() <= content_length)
+                this->finshed = true;
     }
 }
 
-Parser::Parser(std::string request)
+void Parser::parse_headers()
 {
-    this->requ += request;
+    // this->requ += request;
+
     std::string line;
-    std::stringstream ss(request);
+    std::stringstream ss(requ);
     std::getline(ss, line);
     std::stringstream ss2(line);
     std::getline(ss2, method, ' ');
     std::getline(ss2, target, ' ');
     std::getline(ss2, version, ' ');
+    bool  endheadrs = false;
     while (std::getline(ss, line))
     {
         if (line[0] == '\r')
         {
+            endheadrs = true;
             std::getline(ss, line);
             break; 
         }
@@ -115,20 +125,42 @@ Parser::Parser(std::string request)
             throw  std::exception();
         this->_headers.insert(std::make_pair(list[0], list[1]));
     }
-    int size;
-    std::stringstream d(line);
-    d >> std::hex >> size;
-    std::cout << "******" << size << "******" << std::endl;
-    std::cout << "3333333 " << line << "333333" << std::endl;
-    exit(1);
-    // body += receive_body(line);
+    if (this->method  == "")
+        isError = true;
+    if (this->method == "GET")
+        this->finshed = true;
+    isHeader_finshed = true;
+
+}
+
+Parser::Parser(std::string request)
+{
+    finshed = false;
+    isHeader_finshed =false;
+    isError = false;
+    this->append_request(request);
 }
 
 
 std::string Parser::append_request(std::string request)
 {
-    
-    // this->requ += request;
+
+    if (isHeader_finshed == true)
+    {
+        receive_body(request);
+        return this->requ;
+    }
+    else
+        this->requ  +=  request;
+    if (requ.find("\r\n")  == std::string::npos)
+        return this->requ;
+    else
+    {
+        this->parse_headers();
+    }
+
+
+
     return this->requ ;
 }
 std::string Parser::get_target()
@@ -147,18 +179,18 @@ std::string Parser::get_body()
 {
     return body;
 }
-std::string Parser::get_header()
-{
-    return header;
-}
-std::string Parser::get_host()
-{
-    return host;
-}
-std::string Parser::get_port()
-{
-    return port;
-}
+// std::string Parser::get_header()
+// {
+//     return header;
+// }
+// std::string Parser::get_host()
+// {
+//     return host;
+// }
+// std::string Parser::get_port()
+// {
+//     return port;
+// }
 std::string Parser::get_path()
 {
     return path;

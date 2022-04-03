@@ -48,7 +48,7 @@ class Responce
         void set_accept_encoding(std::string accept_encoding);
         void set_access_control_allow_origin(std::string access_control_allow_origin);
         void set_x_frame_options(std::string x_frame_options);
-        void set_responce(std::string target);//, std::string method, std::string version);//, std::string body);
+        void set_responce(std::string target, std::string body_request);//, std::string method, std::string version);//, std::string body);
         std::string get_responce();
 
 };

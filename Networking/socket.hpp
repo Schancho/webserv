@@ -34,13 +34,9 @@ private:
     std::string method;
     std::string version;
     std::string body;
-    std::string header;
-    std::string host;
-    std::string port;
     std::string path;
-    std::string content_length;
-    std::string transfert_encoding;
     std::string requ;
+    int content_length;
 
     public:
     Parser(std::string request);
@@ -51,11 +47,14 @@ private:
     std::string get_body();
     std::string get_header();
     std::string get_host();
-    std::string get_port();
     std::string get_path();
-    std::string get_transfert_encoding();
-    std::string get_content_length();
     std::string append_request(std::string request);
+    void receive_body(std::string line);
+    int get_content_length(); 
+    void parse_headers();
+    bool finshed;
+    bool isHeader_finshed;
+    bool isError ;
     
 };
 

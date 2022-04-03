@@ -80,7 +80,6 @@ int main()
         }
         for (i = 0; i < nfds; i++)
         {   
-            printf("\n+++++++ Waiting for new  connection %d ++++++++\n\n", fds[i].fd);
             if (fds[i].revents & POLLIN)
             {
                  if (fds[i].fd== sock.get_socket())
@@ -92,16 +91,15 @@ int main()
                         perror("accept");
                         exit(EXIT_FAILURE);
                     }
-                    printf("\n+++++++ New connection accepted ++++++++\n\n");
                     fds[nfds].fd = new_socket;
                     fds[nfds].events = POLLIN;
                     nfds++;
                     continue; ;
                 }
-
+                
                 valread = read(fds[i].fd, buffer, 3000);
-                    
-                printf("%s\n",buffer);
+        
+                //printf("sdfsdfd    %s\n",buffer);
                 if (valread < 0)
                 {
                     close(fds[i].fd);
@@ -120,7 +118,7 @@ int main()
                 if (map_request.find(fds[i].fd) != map_request.end())
                 {
                         //append
-                        map_request.find(fds[i].fd)->second->append_request(request);
+                      map_request.find(fds[i].fd)->second->append_request(request);
                         //parser.append(buffer );
                 }
                 else
@@ -129,21 +127,28 @@ int main()
                      map_request.insert(std::make_pair(fds[i].fd,parser));
 
                 }
-                // if (parser->Isfinshed)
-                fds[i].events = POLLOUT;
+                //std::cout << "=========>" << parser->finshed << "=======" <<  parser->get_method() << "=======" << std::endl;
+                if (parser->isError)
+                {
+                    std::cout << "ERror" << std::endl;
+                     close(fds[i].fd);
+                    fds[i].fd = -1;
+
+                }
+                if (parser->finshed ==  true)
+                    fds[i].events = POLLOUT;
                 continue;
             }
             else if (fds[i].revents & POLLOUT)
             {              
-                std::cout << "============ ======================  " << fds[i].fd  << std::endl;
 
                 Parser *parser = map_request.find(fds[i].fd)->second;
                 Responce resp(sock);
             
                 if (parser->get_target() == "/")
-                    resp.set_responce("/index.html");
+                    resp.set_responce("/index.html", parser->get_body());
                 else
-                    resp.set_responce(parser->get_target());
+                    resp.set_responce(parser->get_target(), parser->get_body()) ;
                 
                 signal(SIGPIPE, SIG_IGN);
                 int ret =   write(fds[i].fd , resp.get_responce().c_str() , resp.get_responce().size());
@@ -159,3 +164,5 @@ int main()
     }
     return 0;
 }
+
+
