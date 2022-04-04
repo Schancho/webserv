@@ -61,7 +61,7 @@ int main()
     int i;
     int new_socket = -1, valread ;
     Socket sock(AF_INET, SOCK_STREAM, 0, 1338, INADDR_ANY); 
-    char buffer[30000] = {0};
+    char buffer[1000] = {0};
     struct sockaddr_in remote_address;
     socklen_t len =  sizeof(sockaddr_in);
     memset(fds, 0 , sizeof(fds));
@@ -70,6 +70,7 @@ int main()
 
     fds[0].fd = sock.get_socket();
     fds[0].events = POLLIN;
+    int k = 0;
     while (1)
     {
         int ret = poll(fds, nfds, -1);
@@ -97,7 +98,8 @@ int main()
                     continue; ;
                 }
                 
-                valread = read(fds[i].fd, buffer, 3000);
+                valread = read(fds[i].fd, buffer, 1000);
+                printf("valread: %d\n", valread);
         
                 //printf("sdfsdfd    %s\n",buffer);
                 if (valread < 0)
@@ -112,19 +114,24 @@ int main()
                     fds[i].fd = -1;
                     continue;
                 }
-                std::string request(buffer);
+                std::string request(buffer, valread);
                 std::string str;
                 Parser *parser;
+                //std::cout << "first requ " << request << "sizeOfrequ " << request.size() << std::endl;
                 if (map_request.find(fds[i].fd) != map_request.end())
                 {
                         //append
                       map_request.find(fds[i].fd)->second->append_request(request);
+                      std::cout <<  map_request.find(fds[i].fd)->second->requ.size()  << "====2=" << valread << std::endl;
+                      printf("there\n");
                         //parser.append(buffer );
                 }
                 else
                 {
                     parser = new Parser(request);
                      map_request.insert(std::make_pair(fds[i].fd,parser));
+                     printf("here\n");
+                     std::cout << parser->requ.size() << "=1===="  << valread << std::endl;
 
                 }
                 //std::cout << "=========>" << parser->finshed << "=======" <<  parser->get_method() << "=======" << std::endl;

@@ -90,13 +90,22 @@ void Parser::receive_body(std::string line)
     }
     else
     {
-        body += line;
-        content_length += body.size();
+        body.append(line.c_str(), line.size());
+        content_length += line.size();
+        std::cout << "size of body  " <<  body.size()  << "size of lin e: " << line.size() << std::endl;
         
         std:: cout << "****** " << content_length << std::endl;
         if (this->_headers.count("Content-Length") >= 0)
-            if(this->_headers.at("Content-Length").size() <= content_length)
+        {
+
+            std:: cout << stoi(this->_headers.at("Content-Length")) << std::endl;
+            std:: cout << "=====erf" <<  content_length << std::endl;
+            if(stoi(this->_headers.at("Content-Length")) <= content_length)
+            {
                 this->finshed = true;
+                std::cout << "check "<< std::endl;
+            }
+        }
     }
 }
 
@@ -104,6 +113,7 @@ void Parser::parse_headers()
 {
     // this->requ += request;
 
+    
     std::string line;
     std::stringstream ss(requ);
     std::getline(ss, line);
@@ -129,33 +139,45 @@ void Parser::parse_headers()
         isError = true;
     if (this->method == "GET")
         this->finshed = true;
+    else {
+        std::size_t  pos =  requ.find("\n\r");
+     receive_body(requ.substr(pos +3 ));
+    }
     isHeader_finshed = true;
 
 }
 
-Parser::Parser(std::string request)
+Parser::Parser(std::string request) : body()
 {
     finshed = false;
     isHeader_finshed =false;
     isError = false;
+    found = false;
+    //std::cout << "requ " << request << "sizeOfrequ " << request.size() << std::endl;
     this->append_request(request);
 }
 
 
 std::string Parser::append_request(std::string request)
 {
-
+    //std::cout << "requ " << requ << "sizeOfrequ " << requ.size() << std::endl;
     if (isHeader_finshed == true)
     {
         receive_body(request);
         return this->requ;
     }
     else
-        this->requ  +=  request;
-    if (requ.find("\r\n")  == std::string::npos)
+        this->requ.append(request);
+    // std::cout << "requ " << requ << "sizeOfrequ " << requ.size() << std::endl;
+    // exit(1);
+    if (requ.find("\r\n")  == std::string::npos && !found)
+    {
+        found = true;
         return this->requ;
+    }
     else
     {
+        std::cout << "dfg" << std::endl;
         this->parse_headers();
     }
 

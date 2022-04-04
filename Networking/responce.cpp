@@ -140,9 +140,11 @@ void Responce::set_responce(std::string target, std::string body_request)//, std
     this->responce += "X-Frame-Options: " + x_frame_options + "\r\n";
     this->responce += "\r\n";
     this->responce.append(body.c_str(), body.size());
-    if(body_request.size() > 0)
+    std::cout << "========>" << body_request.size()  << std::endl;
+     if(body_request.size() > 0)
     {
         std::ofstream file;
+        std::cout << "====" << std::endl;
 	    file.open("kkll.jpg");
         if (file.is_open())
             file << body_request;

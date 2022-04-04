@@ -35,10 +35,11 @@ private:
     std::string version;
     std::string body;
     std::string path;
-    std::string requ;
+    
     int content_length;
 
     public:
+    std::string requ;
     Parser(std::string request);
     std::map<std::string, std::string>_headers;
     std::string get_target();
@@ -55,6 +56,7 @@ private:
     bool finshed;
     bool isHeader_finshed;
     bool isError ;
+    bool found;
     
 };
 
